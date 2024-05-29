@@ -7,12 +7,18 @@ class Users::SessionsController < Devise::SessionsController
   private
 
   def respond_with(resource, _opts = {})
-    token = generate_jwt_token(resource)
-    render json: {
-      status: { code: 200, message: 'Logged in successfully.' },
-      data: UserSerializer.new(resource).serializable_hash[:data][:attributes],
-      token: token
-    }, status: :ok
+    if resource.active_for_authentication?
+      token = generate_jwt_token(resource)
+      render json: {
+        status: { code: 200, message: 'Logged in successfully.' },
+        data: UserSerializer.new(resource).serializable_hash[:data][:attributes],
+        token: token
+      }, status: :ok
+    else
+      render json: {
+        status: { code: 401, message: 'You have to confirm your email address before continuing.' }
+      }, status: :unauthorized
+    end
   end
 
   def respond_to_on_destroy
